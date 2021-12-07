@@ -36,6 +36,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String _imageClass = "Unknown";
   File? imageURI;
+  var imgBytes;
 
   @override
   Widget build(BuildContext context) {
@@ -49,11 +50,25 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             imageURI == null
                 ? Text('No image selected.')
-                : Image.file(imageURI!, fit: BoxFit.cover),
+                : Image.file(imageURI!, width: 300, fit: BoxFit.cover),
             Text(
               _imageClass,
               style: Theme.of(context).textTheme.headline4,
             ),
+            ElevatedButton(
+                onPressed: () async {
+                  imgBytes = imageURI!.readAsBytesSync();
+                  String base64Image =
+                      "data:image/png;base64," + base64Encode(imgBytes);
+                  final result = await classifyPetImage(base64Image);
+                  print(result['confidences']);
+                  print(result['label']);
+
+                  setState(() {
+                    _imageClass = result['label'];
+                  });
+                },
+                child: const Text("Clasify"))
           ],
         ),
       ),
@@ -72,17 +87,17 @@ class _MyHomePageState extends State<MyHomePage> {
               imageURI = imgFile;
             });
 
-            final imgBytes = imgFile.readAsBytesSync();
-            String base64Image =
-                "data:image/png;base64," + base64Encode(imgBytes);
+            // final imgBytes = imgFile.readAsBytesSync();
+            // String base64Image =
+            //     "data:image/png;base64," + base64Encode(imgBytes);
 
-            final result = await classifyPetImage(base64Image);
-            print(result['confidences']);
-            print(result['label']);
+            // final result = await classifyPetImage(base64Image);
+            // print(result['confidences']);
+            // print(result['label']);
 
-            setState(() {
-              _imageClass = result['label'];
-            });
+            // setState(() {
+            //   _imageClass = result['label'];
+            // });
           }
         },
         tooltip: 'Increment',
