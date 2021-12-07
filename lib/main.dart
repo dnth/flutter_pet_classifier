@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'pets_services.dart';
 
@@ -46,6 +47,32 @@ class _MyHomePageState extends State<MyHomePage> {
     ${results['confidences'][0]['label']} - ${results['confidences'][0]['confidence'].toStringAsFixed(2)} \n
     ${results['confidences'][1]['label']} - ${results['confidences'][1]['confidence'].toStringAsFixed(2)} \n
     ${results['confidences'][2]['label']} - ${results['confidences'][2]['confidence'].toStringAsFixed(2)} """;
+  }
+
+  Future<File> cropImage(XFile pickedFile) async {
+    // Crop image here
+    final File? croppedFile = await ImageCropper.cropImage(
+      sourcePath: pickedFile.path,
+      cropStyle: CropStyle.circle,
+      aspectRatioPresets: [
+        CropAspectRatioPreset.square,
+        // CropAspectRatioPreset.ratio3x2,
+        // CropAspectRatioPreset.original,
+        // CropAspectRatioPreset.ratio4x3,
+        // CropAspectRatioPreset.ratio16x9
+      ],
+      androidUiSettings: AndroidUiSettings(
+          toolbarTitle: 'Cropper',
+          toolbarColor: Theme.of(context).primaryColor,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false),
+      iosUiSettings: const IOSUiSettings(
+        minimumAspectRatio: 1.0,
+      ),
+    );
+
+    return croppedFile!;
   }
 
   @override
@@ -124,53 +151,84 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: ListView(
                       children: [
                         ListTile(
-                          leading: Icon(Icons.camera),
+                          leading: const Icon(Icons.camera),
                           title: const Text("Camera"),
                           onTap: () async {
                             final XFile? pickedFile = await ImagePicker()
                                 .pickImage(source: ImageSource.camera);
 
-                            if (pickedFile == null) {
-                              print('no file selected');
-                              return null;
-                            } else {
+                            if (pickedFile != null) {
                               // Clear result of previous inference as soon as new image is selected
                               setState(() {
                                 _resultString = "";
                               });
 
-                              final imgFile = File(pickedFile.path);
+                              File croppedFile = await cropImage(pickedFile);
+                              final imgFile = File(croppedFile.path);
 
                               setState(() {
                                 imageURI = imgFile;
                               });
                               Navigator.pop(context);
                             }
+                            // if (pickedFile == null) {
+                            //   // print('no file selected');
+                            //   return;
+                            // } else {
+                            //   // Clear result of previous inference as soon as new image is selected
+                            //   setState(() {
+                            //     _resultString = "";
+                            //   });
+
+                            //   File croppedFile = await cropImage(pickedFile);
+                            //   final imgFile = File(croppedFile.path);
+
+                            //   setState(() {
+                            //     imageURI = imgFile;
+                            //   });
+                            //   Navigator.pop(context);
+                            // }
                           },
                         ),
                         ListTile(
-                          leading: Icon(Icons.image),
+                          leading: const Icon(Icons.image),
                           title: const Text("Gallery"),
                           onTap: () async {
                             final XFile? pickedFile = await ImagePicker()
                                 .pickImage(source: ImageSource.gallery);
 
-                            if (pickedFile == null) {
-                              print('no file selected');
-                              return null;
-                            } else {
+                            if (pickedFile != null) {
                               // Clear result of previous inference as soon as new image is selected
                               setState(() {
                                 _resultString = "";
                               });
 
-                              final imgFile = File(pickedFile.path);
+                              File croppedFile = await cropImage(pickedFile);
+                              final imgFile = File(croppedFile.path);
 
                               setState(() {
                                 imageURI = imgFile;
                               });
                               Navigator.pop(context);
                             }
+
+                            // if (pickedFile == null) {
+                            //   print('no file selected');
+                            //   return null;
+                            // } else {
+                            //   // Clear result of previous inference as soon as new image is selected
+                            //   setState(() {
+                            //     _resultString = "";
+                            //   });
+
+                            //   File croppedFile = await cropImage(pickedFile);
+                            //   final imgFile = File(croppedFile.path);
+
+                            //   setState(() {
+                            //     imageURI = imgFile;
+                            //   });
+                            //   Navigator.pop(context);
+                            // }
                           },
                         )
                       ],
