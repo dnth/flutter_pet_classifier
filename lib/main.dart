@@ -44,9 +44,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String parseResults(Map results) {
     return """
-    ${results['confidences'][0]['label']} - ${results['confidences'][0]['confidence'].toStringAsFixed(2)} \n
-    ${results['confidences'][1]['label']} - ${results['confidences'][1]['confidence'].toStringAsFixed(2)} \n
-    ${results['confidences'][2]['label']} - ${results['confidences'][2]['confidence'].toStringAsFixed(2)} """;
+    ${results['confidences'][0]['label']} - ${(results['confidences'][0]['confidence'] * 100.0).toStringAsFixed(2)}% \n
+    ${results['confidences'][1]['label']} - ${(results['confidences'][1]['confidence'] * 100.0).toStringAsFixed(2)}% \n
+    ${results['confidences'][2]['label']} - ${(results['confidences'][2]['confidence'] * 100.0).toStringAsFixed(2)}% """;
   }
 
   Future<File> cropImage(XFile pickedFile) async {
@@ -88,14 +88,26 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               imageURI == null
-                  ? const Text('Select an image by pressing the camera icon.')
+                  ? const Text(
+                      'Select an image by pressing the camera icon and I will tell you my',
+                      textAlign: TextAlign.center,
+                    )
                   : Image.file(imageURI!, height: 300, fit: BoxFit.cover),
               const SizedBox(
                 height: 10,
               ),
-              Text(
-                _resultString ?? "",
-                style: Theme.of(context).textTheme.bodyText2,
+              Text("Top 3 predictions",
+                  style: Theme.of(context).textTheme.headline6),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _resultString ?? "",
+                      style: Theme.of(context).textTheme.bodyText1,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(
                 height: 10,
