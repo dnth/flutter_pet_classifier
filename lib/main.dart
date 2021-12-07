@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Pet Classifier'),
     );
   }
 }
@@ -34,14 +34,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
   String _imageClass = "Unknown";
   File? imageURI;
 
   @override
   Widget build(BuildContext context) {
-    String? imagePath;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -52,8 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             imageURI == null
                 ? Text('No image selected.')
-                : Image.file(imageURI!,
-                    width: 300, height: 200, fit: BoxFit.cover),
+                : Image.file(imageURI!, fit: BoxFit.cover),
             Text(
               _imageClass,
               style: Theme.of(context).textTheme.headline4,
