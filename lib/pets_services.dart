@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
-import 'package:http/retry.dart';
 
 Future<Map> classifyPetImage(String imageBase64) async {
   // Animefy the given image by requesting the gradio API of AnimeGANv2
