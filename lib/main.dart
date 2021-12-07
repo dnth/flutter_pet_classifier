@@ -21,6 +21,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const MyHomePage(title: 'Pet Classifier'),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -114,20 +115,67 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final XFile? pickedFile =
-              await ImagePicker().pickImage(source: ImageSource.camera);
+        onPressed: () {
+          showModalBottomSheet<void>(
+              context: context,
+              builder: (BuildContext context) {
+                return Container(
+                    height: 130,
+                    child: ListView(
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.camera),
+                          title: const Text("Camera"),
+                          onTap: () async {
+                            final XFile? pickedFile = await ImagePicker()
+                                .pickImage(source: ImageSource.camera);
 
-          if (pickedFile == null) {
-            print('no file selected');
-            return null;
-          } else {
-            final imgFile = File(pickedFile.path);
+                            if (pickedFile == null) {
+                              print('no file selected');
+                              return null;
+                            } else {
+                              // Clear result of previous inference as soon as new image is selected
+                              setState(() {
+                                _resultString = "";
+                              });
 
-            setState(() {
-              imageURI = imgFile;
-            });
-          }
+                              final imgFile = File(pickedFile.path);
+
+                              setState(() {
+                                imageURI = imgFile;
+                              });
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                        ListTile(
+                          leading: Icon(Icons.image),
+                          title: const Text("Gallery"),
+                          onTap: () async {
+                            final XFile? pickedFile = await ImagePicker()
+                                .pickImage(source: ImageSource.gallery);
+
+                            if (pickedFile == null) {
+                              print('no file selected');
+                              return null;
+                            } else {
+                              // Clear result of previous inference as soon as new image is selected
+                              setState(() {
+                                _resultString = "";
+                              });
+
+                              final imgFile = File(pickedFile.path);
+
+                              setState(() {
+                                imageURI = imgFile;
+                              });
+                              Navigator.pop(context);
+                            }
+                          },
+                        )
+                      ],
+                    ));
+              });
         },
         child: const Icon(Icons.camera),
       ),
