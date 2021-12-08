@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'pets_services.dart';
 
 void main() {
@@ -38,6 +39,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final RoundedLoadingButtonController _btnController =
+      RoundedLoadingButtonController();
+
   String? _resultString;
   Map _resultDict = {
     "label": "None",
@@ -140,56 +144,35 @@ class _MyHomePageState extends State<MyHomePage> {
                   style: Theme.of(context).textTheme.headline6),
               const SizedBox(height: 20),
               buildResultsIndicators(_resultDict),
-              // Row(
-              //   children: [
-              //     Expanded(
-              //       child: Text(
-              //         _resultString ?? "",
-              //         style: Theme.of(context).textTheme.bodyText1,
-              //       ),
-              //     ),
-              //   ],
-              // ),
               const SizedBox(
                 height: 10,
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: isClassifying || imageURI == null
-                          ? null // null disables the button
-                          : () async {
-                              setState(() {
-                                isClassifying = true;
-                              });
+              RoundedLoadingButton(
+                width: MediaQuery.of(context).size.width,
+                child: const Text('Classify!',
+                    style: TextStyle(color: Colors.white)),
+                controller: _btnController,
+                onPressed: isClassifying || imageURI == null
+                    ? null // null value disables the button
+                    : () async {
+                        setState(() {
+                          isClassifying = true;
+                        });
 
-                              imgBytes = imageURI!.readAsBytesSync();
-                              String base64Image = "data:image/png;base64," +
-                                  base64Encode(imgBytes!);
-                              final result =
-                                  await classifyPetImage(base64Image);
-                              // print(result['confidences']);
-                              // print(result['label']);
+                        imgBytes = imageURI!.readAsBytesSync();
+                        String base64Image =
+                            "data:image/png;base64," + base64Encode(imgBytes!);
+                        final result = await classifyPetImage(base64Image);
+                        _btnController.reset();
 
-                              setState(() {
-                                _resultString = parseResultsIntoString(result);
-                                _resultDict = result;
+                        setState(() {
+                          _resultString = parseResultsIntoString(result);
+                          _resultDict = result;
 
-                                isClassifying = false;
-                              });
-                            },
-                      child: isClassifying
-                          ? const Text("Loading..")
-                          : const Text("Classify!"),
-                      style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              //to set border radius to button
-                              borderRadius: BorderRadius.circular(30))),
-                    ),
-                  ),
-                ],
-              )
+                          isClassifying = false;
+                        });
+                      },
+              ),
             ],
           ),
         ),
@@ -200,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
               context: context,
               builder: (BuildContext context) {
                 return Container(
-                    height: 130,
+                    height: 120,
                     child: ListView(
                       children: [
                         ListTile(
@@ -232,23 +215,6 @@ class _MyHomePageState extends State<MyHomePage> {
                               });
                               Navigator.pop(context);
                             }
-                            // if (pickedFile == null) {
-                            //   // print('no file selected');
-                            //   return;
-                            // } else {
-                            //   // Clear result of previous inference as soon as new image is selected
-                            //   setState(() {
-                            //     _resultString = "";
-                            //   });
-
-                            //   File croppedFile = await cropImage(pickedFile);
-                            //   final imgFile = File(croppedFile.path);
-
-                            //   setState(() {
-                            //     imageURI = imgFile;
-                            //   });
-                            //   Navigator.pop(context);
-                            // }
                           },
                         ),
                         ListTile(
@@ -280,24 +246,6 @@ class _MyHomePageState extends State<MyHomePage> {
                               });
                               Navigator.pop(context);
                             }
-
-                            // if (pickedFile == null) {
-                            //   print('no file selected');
-                            //   return null;
-                            // } else {
-                            //   // Clear result of previous inference as soon as new image is selected
-                            //   setState(() {
-                            //     _resultString = "";
-                            //   });
-
-                            //   File croppedFile = await cropImage(pickedFile);
-                            //   final imgFile = File(croppedFile.path);
-
-                            //   setState(() {
-                            //     imageURI = imgFile;
-                            //   });
-                            //   Navigator.pop(context);
-                            // }
                           },
                         )
                       ],
