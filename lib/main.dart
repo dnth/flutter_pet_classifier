@@ -97,7 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // Crop image here
     final File? croppedFile = await ImageCropper.cropImage(
       sourcePath: pickedFile.path,
-      cropStyle: CropStyle.circle,
+      cropStyle: CropStyle.rectangle,
       aspectRatioPresets: [
         CropAspectRatioPreset.square,
         // CropAspectRatioPreset.ratio3x2,
