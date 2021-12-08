@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'pets_services.dart';
 
 void main() {
@@ -38,15 +39,54 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String? _resultString;
+  Map _resultDict = {
+    "label": "None",
+    "confidences": [
+      {"label": "None", "confidence": 0.0},
+      {"label": "None", "confidence": 0.0},
+      {"label": "None", "confidence": 0.0}
+    ]
+  };
   File? imageURI;
   Uint8List? imgBytes;
   bool isClassifying = false;
 
-  String parseResults(Map results) {
+  String parseResultsIntoString(Map results) {
     return """
     ${results['confidences'][0]['label']} - ${(results['confidences'][0]['confidence'] * 100.0).toStringAsFixed(2)}% \n
     ${results['confidences'][1]['label']} - ${(results['confidences'][1]['confidence'] * 100.0).toStringAsFixed(2)}% \n
     ${results['confidences'][2]['label']} - ${(results['confidences'][2]['confidence'] * 100.0).toStringAsFixed(2)}% """;
+  }
+
+  Widget buildPercentIndicator(String className, double classConfidence) {
+    return LinearPercentIndicator(
+      width: 200.0,
+      lineHeight: 18.0,
+      percent: classConfidence,
+      center: Text(
+        "${(classConfidence * 100.0).toStringAsFixed(2)} %",
+        style: const TextStyle(fontSize: 12.0),
+      ),
+      trailing: Text(className),
+      leading: const Icon(Icons.arrow_forward_ios),
+      linearStrokeCap: LinearStrokeCap.roundAll,
+      backgroundColor: Colors.grey,
+      progressColor: Colors.blue,
+      animation: true,
+    );
+  }
+
+  Widget buildResultsIndicators(Map resultsDict) {
+    return Column(
+      children: [
+        buildPercentIndicator(resultsDict['confidences'][0]['label'],
+            (resultsDict['confidences'][0]['confidence'])),
+        buildPercentIndicator(resultsDict['confidences'][1]['label'],
+            (resultsDict['confidences'][1]['confidence'])),
+        buildPercentIndicator(resultsDict['confidences'][2]['label'],
+            (resultsDict['confidences'][2]['confidence']))
+      ],
+    );
   }
 
   Future<File> cropImage(XFile pickedFile) async {
@@ -99,16 +139,17 @@ class _MyHomePageState extends State<MyHomePage> {
               Text("Top 3 predictions",
                   style: Theme.of(context).textTheme.headline6),
               const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _resultString ?? "",
-                      style: Theme.of(context).textTheme.bodyText1,
-                    ),
-                  ),
-                ],
-              ),
+              buildResultsIndicators(_resultDict),
+              // Row(
+              //   children: [
+              //     Expanded(
+              //       child: Text(
+              //         _resultString ?? "",
+              //         style: Theme.of(context).textTheme.bodyText1,
+              //       ),
+              //     ),
+              //   ],
+              // ),
               const SizedBox(
                 height: 10,
               ),
@@ -132,9 +173,9 @@ class _MyHomePageState extends State<MyHomePage> {
                               // print(result['label']);
 
                               setState(() {
-                                _resultString = parseResults(result);
-                                // _resultString =
-                                //     result['confidences'][0]['label'];
+                                _resultString = parseResultsIntoString(result);
+                                _resultDict = result;
+
                                 isClassifying = false;
                               });
                             },
@@ -173,6 +214,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               // Clear result of previous inference as soon as new image is selected
                               setState(() {
                                 _resultString = "";
+                                _resultDict = {
+                                  "label": "None",
+                                  "confidences": [
+                                    {"label": "None", "confidence": 0.0},
+                                    {"label": "None", "confidence": 0.0},
+                                    {"label": "None", "confidence": 0.0}
+                                  ]
+                                };
                               });
 
                               File croppedFile = await cropImage(pickedFile);
@@ -213,6 +262,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               // Clear result of previous inference as soon as new image is selected
                               setState(() {
                                 _resultString = "";
+                                _resultDict = {
+                                  "label": "None",
+                                  "confidences": [
+                                    {"label": "None", "confidence": 0.0},
+                                    {"label": "None", "confidence": 0.0},
+                                    {"label": "None", "confidence": 0.0}
+                                  ]
+                                };
                               });
 
                               File croppedFile = await cropImage(pickedFile);
