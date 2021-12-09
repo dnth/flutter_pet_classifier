@@ -137,12 +137,19 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               imageURI == null && imageURIWeb == null
                   ? const Text(
-                      'Select an image by pressing the camera icon and I will tell you my',
+                      'Select an image by pressing the shutter icon',
                       textAlign: TextAlign.center,
                     )
                   : kIsWeb
                       ? SizedBox(
-                          height: 300, child: Image.network(imageURIWeb!))
+                          height: 300,
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: Image.network(
+                              imageURIWeb!,
+                              fit: BoxFit.cover,
+                            ),
+                          ))
                       : Image.file(imageURI!, height: 300, fit: BoxFit.cover),
               const SizedBox(
                 height: 10,
