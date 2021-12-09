@@ -39,6 +39,10 @@ dependencies:
   image_cropper: ^1.4.1
   percent_indicator: ^3.4.0
   rounded_loading_button: ^2.0.9
+  image_picker_web: ^2.0.3+1
+  image_picker_for_web: ^2.1.4
+  file_picker: ^4.2.7
+  path_provider: ^2.0.7
 
 dev_dependencies:
   flutter_test:

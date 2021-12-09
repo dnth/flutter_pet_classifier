@@ -7,6 +7,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'pets_services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -52,6 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
     ]
   };
   File? imageURI;
+  String? imageURIWeb;
   Uint8List? imgBytes;
   bool isClassifying = false;
 
@@ -131,12 +135,15 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              imageURI == null
+              imageURI == null && imageURIWeb == null
                   ? const Text(
                       'Select an image by pressing the camera icon and I will tell you my',
                       textAlign: TextAlign.center,
                     )
-                  : Image.file(imageURI!, height: 300, fit: BoxFit.cover),
+                  : kIsWeb
+                      ? SizedBox(
+                          height: 300, child: Image.network(imageURIWeb!))
+                      : Image.file(imageURI!, height: 300, fit: BoxFit.cover),
               const SizedBox(
                 height: 10,
               ),
@@ -152,16 +159,31 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: const Text('Classify!',
                     style: TextStyle(color: Colors.white)),
                 controller: _btnController,
-                onPressed: isClassifying || imageURI == null
+                onPressed: isClassifying ||
+                        (imageURI == null && imageURIWeb == null)
                     ? null // null value disables the button
                     : () async {
                         setState(() {
                           isClassifying = true;
                         });
 
-                        imgBytes = imageURI!.readAsBytesSync();
+                        if (kIsWeb) {
+                          // For web
+                          // first we make a request to the url like you did
+                          // in the android and ios version
+                          final http.Response r = await http.get(
+                            Uri.parse(imageURIWeb!),
+                          );
+                          // we get the bytes from the body
+                          imgBytes = r.bodyBytes;
+                        } else {
+                          // For mobile
+                          imgBytes = imageURI!.readAsBytesSync();
+                        }
+
                         String base64Image =
                             "data:image/png;base64," + base64Encode(imgBytes!);
+
                         final result = await classifyPetImage(base64Image);
                         _btnController.reset();
 
@@ -178,79 +200,92 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet<void>(
-              context: context,
-              builder: (BuildContext context) {
-                return Container(
-                    height: 120,
-                    child: ListView(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.camera),
-                          title: const Text("Camera"),
-                          onTap: () async {
-                            final XFile? pickedFile = await ImagePicker()
-                                .pickImage(source: ImageSource.camera);
+        onPressed: () async {
+          if (kIsWeb) {
+            // running on the web!
+            print("Operating on web");
 
-                            if (pickedFile != null) {
-                              // Clear result of previous inference as soon as new image is selected
-                              setState(() {
-                                _resultString = "";
-                                _resultDict = {
-                                  "label": "None",
-                                  "confidences": [
-                                    {"label": "None", "confidence": 0.0},
-                                    {"label": "None", "confidence": 0.0},
-                                    {"label": "None", "confidence": 0.0}
-                                  ]
-                                };
-                              });
+            final pickedFile =
+                await ImagePicker().pickImage(source: ImageSource.gallery);
 
-                              File croppedFile = await cropImage(pickedFile);
-                              final imgFile = File(croppedFile.path);
+            setState(() {
+              imageURIWeb = pickedFile!.path;
+            });
+          } else {
+            // NOT running on the web! You can check for additional platforms here.
+            showModalBottomSheet<void>(
+                context: context,
+                builder: (BuildContext context) {
+                  return Container(
+                      height: 120,
+                      child: ListView(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.camera),
+                            title: const Text("Camera"),
+                            onTap: () async {
+                              final XFile? pickedFile = await ImagePicker()
+                                  .pickImage(source: ImageSource.camera);
 
-                              setState(() {
-                                imageURI = imgFile;
-                              });
-                              Navigator.pop(context);
-                            }
-                          },
-                        ),
-                        ListTile(
-                          leading: const Icon(Icons.image),
-                          title: const Text("Gallery"),
-                          onTap: () async {
-                            final XFile? pickedFile = await ImagePicker()
-                                .pickImage(source: ImageSource.gallery);
+                              if (pickedFile != null) {
+                                // Clear result of previous inference as soon as new image is selected
+                                setState(() {
+                                  _resultString = "";
+                                  _resultDict = {
+                                    "label": "None",
+                                    "confidences": [
+                                      {"label": "None", "confidence": 0.0},
+                                      {"label": "None", "confidence": 0.0},
+                                      {"label": "None", "confidence": 0.0}
+                                    ]
+                                  };
+                                });
 
-                            if (pickedFile != null) {
-                              // Clear result of previous inference as soon as new image is selected
-                              setState(() {
-                                _resultString = "";
-                                _resultDict = {
-                                  "label": "None",
-                                  "confidences": [
-                                    {"label": "None", "confidence": 0.0},
-                                    {"label": "None", "confidence": 0.0},
-                                    {"label": "None", "confidence": 0.0}
-                                  ]
-                                };
-                              });
+                                File croppedFile = await cropImage(pickedFile);
+                                final imgFile = File(croppedFile.path);
 
-                              File croppedFile = await cropImage(pickedFile);
-                              final imgFile = File(croppedFile.path);
+                                setState(() {
+                                  imageURI = imgFile;
+                                });
+                                Navigator.pop(context);
+                              }
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.image),
+                            title: const Text("Gallery"),
+                            onTap: () async {
+                              final XFile? pickedFile = await ImagePicker()
+                                  .pickImage(source: ImageSource.gallery);
 
-                              setState(() {
-                                imageURI = imgFile;
-                              });
-                              Navigator.pop(context);
-                            }
-                          },
-                        )
-                      ],
-                    ));
-              });
+                              if (pickedFile != null) {
+                                // Clear result of previous inference as soon as new image is selected
+                                setState(() {
+                                  _resultString = "";
+                                  _resultDict = {
+                                    "label": "None",
+                                    "confidences": [
+                                      {"label": "None", "confidence": 0.0},
+                                      {"label": "None", "confidence": 0.0},
+                                      {"label": "None", "confidence": 0.0}
+                                    ]
+                                  };
+                                });
+
+                                File croppedFile = await cropImage(pickedFile);
+                                final imgFile = File(croppedFile.path);
+
+                                setState(() {
+                                  imageURI = imgFile;
+                                });
+                                Navigator.pop(context);
+                              }
+                            },
+                          )
+                        ],
+                      ));
+                });
+          }
         },
         child: const Icon(Icons.camera),
       ),
